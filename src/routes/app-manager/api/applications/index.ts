@@ -18,6 +18,7 @@ export default brewExpressFuncCreateOrFindAll(
       await new ApplicationVersion({
         application: data._id,
         version: data.version,
+        createdby: req.body.createdby,
       }).save();
     },
     beforeQuery: async (options, req, res) => {
@@ -27,10 +28,11 @@ export default brewExpressFuncCreateOrFindAll(
       }
     },
     beforeResponse: (defaultBody, req, res) => {
+      const method = req.method.toLowerCase();
       return {
         ...defaultBody,
         message:
-          req.method.toLowerCase() == "get"
+          method == "get"
             ? "Applications fetched successful."
             : "Application created successful.",
       };

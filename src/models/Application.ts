@@ -49,7 +49,7 @@ const applicationSchema = new Schema(
     status: {
       type: String,
       default: "stop",
-      enum: ["stop", "ready", "deploy"],
+      enum: ["start", "stop", "deploy", "restart", "ready"],
     },
     createdby: {
       type: Schema.Types.ObjectId,
