@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+azure_functions
+aws_lambda
+*.js
+*.js.map

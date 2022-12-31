@@ -1,0 +1,9 @@
+version: '3.9'
+
+services:
+  starless-app:
+    image: starless-app
+    build: .
+    ports:
+      - "7070:3000"
+    
