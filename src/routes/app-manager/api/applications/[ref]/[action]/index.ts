@@ -29,13 +29,7 @@ const build = async (application: ApplicationModel, version: string) => {
   }
 
   if (cmdResult.stderr) {
-    const err: any = new Error(cmdResult.stderr);
-    err.status = 500;
-    err.body = {
-      code: err.status,
-      message: err.message,
-    };
-    throw err;
+    console.log(cmdResult.stderr);
   }
   if (cmdResult.stdout) {
     console.log(cmdResult.stdout);
