@@ -64,7 +64,7 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
       if (method == "get") {
         defaultBody["versions"] = await ApplicationVersion.find({
           application: defaultBody.data._id,
-        });
+        }).sort({ createdAt: -1 });
       }
       return defaultBody;
     },

@@ -1,8 +1,8 @@
 version: '3.9'
 
 services:
-  starless-app:
-    image: starless-app
+  app_manager:
+    image: htetlinmaung/app_manager
     build: .
     ports:
       - "7070:3000"

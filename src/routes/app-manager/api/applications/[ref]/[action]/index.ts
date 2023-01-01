@@ -11,6 +11,7 @@ import { buildImage, Container } from "starless-docker";
 import { DeploymentModel } from "../../../../../../models/Deployment";
 import ApplicationVersion from "../../../../../../models/ApplicationVersion";
 import handleAuthorization from "../../../../../../utils/handle-authorization";
+import { timeout } from "starless-async";
 
 const build = async (
   application: ApplicationModel,
@@ -59,6 +60,9 @@ const build = async (
   if (stdout) {
     console.log(stdout);
   }
+  // if (fs.existsSync(sourceFolderPath)) {
+  //   fs.rmSync(sourceFolderPath, { recursive: true });
+  // }
   const applicationVersion = await ApplicationVersion.findOne({
     application: application._id,
     version,
@@ -81,11 +85,15 @@ export default brewBlankExpressFunc(async (req, res) => {
     action != "stop" &&
     action != "restart" &&
     action != "deploy" &&
-    action != "build"
+    action != "build" &&
+    action != "change-version" &&
+    action != "logs"
   ) {
     return res.sendStatus(404);
   }
-  const application = await Application.findOne({ ref }).populate("deployment");
+  const application = await Application.findOne({
+    ref,
+  }).populate("deployment");
   if (!application) {
     return res.status(404).json({
       code: 404,
@@ -111,7 +119,7 @@ export default brewBlankExpressFunc(async (req, res) => {
     message = `Application build successful.`;
   } else if (action == "deploy") {
     application.status = "deploy";
-    application.save();
+    await application.save();
     if (version == application.version) {
       return res.status(400).json({
         code: 400,
@@ -142,7 +150,7 @@ export default brewBlankExpressFunc(async (req, res) => {
       console.log(err);
     }
     application.status = "stop";
-    application.save();
+    await application.save();
 
     await build(application, version, userId);
 
@@ -156,20 +164,20 @@ export default brewBlankExpressFunc(async (req, res) => {
     message = "Deployment successful.";
   } else if (action == "start") {
     application.status = "start";
-    application.save();
+    await application.save();
     try {
       await container.stop();
     } catch (err) {
       console.log(err);
     }
     application.status = "stop";
-    application.save();
+    await application.save();
     const stdout = await container.run();
     if (stdout) {
       console.log(stdout);
     }
     application.status = "ready";
-    application.save();
+    await application.save();
     message = `Application start successful.`;
   } else if (action == "stop") {
     const stdout = await container.stop();
@@ -177,18 +185,58 @@ export default brewBlankExpressFunc(async (req, res) => {
       console.log(stdout);
     }
     application.status = "stop";
-    application.save();
+    await application.save();
     message = `Application stop successful.`;
   } else if (action == "restart") {
     application.status = "restart";
-    application.save();
+    await application.save();
     const stdout = await container.restart();
     if (stdout) {
       console.log(stdout);
     }
     application.status = "ready";
-    application.save();
+    await application.save();
     message = `Application restart successful.`;
+  } else if (action == "change-version") {
+    const oldContainer = new Container({
+      name: application.name,
+      image: application.name,
+      tag: application.version,
+      autoRemove: true,
+      detach: true,
+      network: process.env.docker_network,
+      publish: application.port,
+      environments: application.environments,
+      volumes: application.volumes,
+    });
+    try {
+      await oldContainer.stop();
+    } catch (err) {
+      console.log(err);
+    }
+    try {
+      await container.stop();
+    } catch (err) {
+      console.log(err);
+    }
+    // await timeout(3);
+    application.status = "stop";
+    await application.save();
+    let stdout = await container.run();
+    if (stdout) {
+      console.log(stdout);
+    }
+    application.status = "ready";
+    application.version = version;
+    await application.save();
+    message = `Version changed successful.`;
+  } else if (action == "logs") {
+    const stdout = await container.logs();
+    return res.json({
+      code: 200,
+      message: "Logs fetched successful.",
+      data: stdout,
+    });
   }
   res.json({
     code: 200,
