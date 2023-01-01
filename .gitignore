@@ -5,3 +5,4 @@ azure_functions
 aws_lambda
 *.js
 *.js.map
+sources
