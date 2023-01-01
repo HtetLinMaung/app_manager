@@ -10,8 +10,13 @@ import connectMongoose from "../../../../../../utils/connect-mongoose";
 import { buildImage, Container } from "starless-docker";
 import { DeploymentModel } from "../../../../../../models/Deployment";
 import ApplicationVersion from "../../../../../../models/ApplicationVersion";
+import handleAuthorization from "../../../../../../utils/handle-authorization";
 
-const build = async (application: ApplicationModel, version: string) => {
+const build = async (
+  application: ApplicationModel,
+  version: string,
+  createdby: string
+) => {
   const sourceFolderPath = path.join(
     sourcesFolderPath,
     path.basename(application.git).replace(".git", "")
@@ -54,9 +59,21 @@ const build = async (application: ApplicationModel, version: string) => {
   if (stdout) {
     console.log(stdout);
   }
+  const applicationVersion = await ApplicationVersion.findOne({
+    application: application._id,
+    version,
+  });
+  if (!applicationVersion) {
+    await new ApplicationVersion({
+      application: application._id,
+      version,
+      createdby,
+    }).save();
+  }
 };
 
 export default brewBlankExpressFunc(async (req, res) => {
+  const { userId } = await handleAuthorization(req);
   await connectMongoose();
   const { ref, action } = req.params;
   if (
@@ -75,16 +92,6 @@ export default brewBlankExpressFunc(async (req, res) => {
       message: "Application not found!",
     });
   }
-  const applicationVersion = await ApplicationVersion.findOne({
-    application: application._id,
-    version: req.query.version,
-  });
-  if (!applicationVersion) {
-    return res.status(404).json({
-      code: 404,
-      message: `Version ${req.query.version} not found!`,
-    });
-  }
 
   const version = req.query.version as string;
   const container = new Container({
@@ -100,12 +107,18 @@ export default brewBlankExpressFunc(async (req, res) => {
   });
   let message = "";
   if (action == "build") {
-    await build(application, version);
+    await build(application, version, userId);
     message = `Application build successful.`;
   } else if (action == "deploy") {
     application.status = "deploy";
     application.save();
-    await build(application, version);
+    if (version == application.version) {
+      return res.status(400).json({
+        code: 400,
+        message: `Version ${version} already deployed.`,
+      });
+    }
+
     const oldContainer = new Container({
       name: application.name,
       image: application.name,
@@ -130,6 +143,8 @@ export default brewBlankExpressFunc(async (req, res) => {
     }
     application.status = "stop";
     application.save();
+
+    await build(application, version, userId);
 
     let stdout = await container.run();
     if (stdout) {

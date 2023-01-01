@@ -20,6 +20,18 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
       }
       req.body.ref = req.body.name.trim().replace(/\s+/g, "-");
     },
+    // afterUpdate: async (data, req, res) => {
+    //   const applicationVersion = await ApplicationVersion.findOne({
+    //     application: data._id,
+    //     version: data.version,
+    //   });
+    //   if (!applicationVersion) {
+    //     await new ApplicationVersion({
+    //       application: data._id,
+    //       version: data.version,
+    //     }).save();
+    //   }
+    // },
     beforeDelete: async (data: ApplicationModel, req, res) => {
       const container = new Container({
         name: data.name,
