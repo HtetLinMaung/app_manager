@@ -43,7 +43,11 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
         environments: data.environments,
         volumes: data.volumes,
       });
-      await container.run();
+      try {
+        await container.run();
+      } catch (err) {
+        console.log(err.message);
+      }
     },
     beforeDelete: async (data: ContainerDataModel, req, res) => {
       const container = new Container({

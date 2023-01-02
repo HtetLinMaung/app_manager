@@ -51,9 +51,13 @@ export default brewBlankExpressFunc(async (req, res) => {
     }
     database.status = "stop";
     await database.save();
-    const stdout = await container.run();
-    if (stdout) {
-      console.log(stdout);
+    try {
+      const stdout = await container.run();
+      if (stdout) {
+        console.log(stdout);
+      }
+    } catch (err) {
+      console.log(err.message);
     }
     database.status = "ready";
     await database.save();
@@ -100,9 +104,13 @@ export default brewBlankExpressFunc(async (req, res) => {
     }
     database.status = "stop";
     await database.save();
-    let stdout = await container.run();
-    if (stdout) {
-      console.log(stdout);
+    try {
+      const stdout = await container.run();
+      if (stdout) {
+        console.log(stdout);
+      }
+    } catch (err) {
+      console.log(err.message);
     }
     database.status = "ready";
     database.tag = version;

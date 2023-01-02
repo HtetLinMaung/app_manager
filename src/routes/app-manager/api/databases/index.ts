@@ -27,7 +27,11 @@ export default brewExpressFuncCreateOrFindAll(
         environments: data.environments,
         volumes: data.volumes,
       });
-      await container.run();
+      try {
+        await container.run();
+      } catch (err) {
+        console.log(err.message);
+      }
       await Database.updateOne(
         { _id: data._id },
         { $set: { status: "ready" } }

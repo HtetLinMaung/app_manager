@@ -155,9 +155,13 @@ export default brewBlankExpressFunc(async (req, res) => {
 
     await build(application, version, userId);
 
-    let stdout = await container.run();
-    if (stdout) {
-      console.log(stdout);
+    try {
+      const stdout = await container.run();
+      if (stdout) {
+        console.log(stdout);
+      }
+    } catch (err) {
+      console.log(err.message);
     }
     containerData.status = "ready";
     containerData.tag = version;
@@ -175,9 +179,13 @@ export default brewBlankExpressFunc(async (req, res) => {
     }
     containerData.status = "stop";
     await containerData.save();
-    const stdout = await container.run();
-    if (stdout) {
-      console.log(stdout);
+    try {
+      const stdout = await container.run();
+      if (stdout) {
+        console.log(stdout);
+      }
+    } catch (err) {
+      console.log(err.message);
     }
     containerData.status = "ready";
     await containerData.save();
@@ -225,9 +233,13 @@ export default brewBlankExpressFunc(async (req, res) => {
 
     containerData.status = "stop";
     await containerData.save();
-    let stdout = await container.run();
-    if (stdout) {
-      console.log(stdout);
+    try {
+      const stdout = await container.run();
+      if (stdout) {
+        console.log(stdout);
+      }
+    } catch (err) {
+      console.log(err.message);
     }
     containerData.status = "ready";
     containerData.tag = version;
