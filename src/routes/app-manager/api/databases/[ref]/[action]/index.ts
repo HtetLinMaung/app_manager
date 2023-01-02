@@ -12,6 +12,7 @@ import { DeploymentModel } from "../../../../../../models/Deployment";
 import ApplicationVersion from "../../../../../../models/ApplicationVersion";
 import handleAuthorization from "../../../../../../utils/handle-authorization";
 import Database from "../../../../../../models/Database";
+import DatabaseTemplate from "../../../../../../models/DatabaseTemplate";
 
 export default brewBlankExpressFunc(async (req, res) => {
   const { userId } = await handleAuthorization(req);
