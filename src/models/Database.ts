@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { UserModel } from "./User";
 
 export interface DatabaseModel {
   _id: string;
@@ -10,6 +11,7 @@ export interface DatabaseModel {
   environments: any;
   volumes: string[];
   status: string;
+  createdby: string | UserModel;
 }
 
 const databaseSchema = new Schema(

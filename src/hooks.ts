@@ -10,7 +10,7 @@ import crypto from "node:crypto";
 import { createNetwork } from "starless-docker";
 import connectRedis from "./utils/connect-redis";
 import { redisClient } from "starless-redis";
-import initDatabaseTemplates from "./data/database-template";
+import initDatabaseTemplates from "./data/database-templates";
 
 export const afterMasterProcessStart = async () => {
   if (!fs.existsSync(sourcesFolderPath)) {

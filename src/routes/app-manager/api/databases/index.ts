@@ -1,6 +1,7 @@
 import { brewExpressFuncCreateOrFindAll } from "code-alchemy";
 import { Container } from "starless-docker";
 import Database, { DatabaseModel } from "../../../../models/Database";
+import DatabaseVersion from "../../../../models/DatabaseVersion";
 import connectMongoose from "../../../../utils/connect-mongoose";
 import handleAuthorization from "../../../../utils/handle-authorization";
 
@@ -31,6 +32,11 @@ export default brewExpressFuncCreateOrFindAll(
         { _id: data._id },
         { $set: { status: "ready" } }
       );
+      await new DatabaseVersion({
+        datbase: data._id,
+        tag: data.tag,
+        createdby: data.createdby,
+      }).save();
     },
     beforeQuery: async (options, req, res) => {
       const { username, userId } = (req as any).payload;

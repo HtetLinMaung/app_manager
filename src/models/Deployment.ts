@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { UserModel } from "./User";
 
 export interface DeploymentModel {
   _id: string;
@@ -7,7 +8,7 @@ export interface DeploymentModel {
   image: string;
   tag: string;
   buildSteps: string[];
-  createdby: string;
+  createdby: string | UserModel;
 }
 
 const deploymentSchema = new Schema(

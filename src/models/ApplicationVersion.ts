@@ -1,11 +1,12 @@
 import { Schema, model } from "mongoose";
 import { ApplicationModel } from "./Application";
+import { UserModel } from "./User";
 
 export interface ApplicationVersionModel {
   _id: string;
   application: string | ApplicationModel;
   version: string;
-  createdby: string;
+  createdby: string | UserModel;
 }
 
 const applicationVersionSchema = new Schema(

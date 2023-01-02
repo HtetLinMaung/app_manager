@@ -1,10 +1,11 @@
 import { Schema, model } from "mongoose";
 
-export interface User {
+export interface UserModel {
   _id: string;
   name: string;
   username: string;
   password: string;
+  createdby: string | UserModel;
 }
 
 const userSchema = new Schema(
@@ -22,6 +23,11 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
+    createdby: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -30,4 +36,4 @@ const userSchema = new Schema(
 
 userSchema.index({ "$**": "text" });
 
-export default model<User>("User", userSchema);
+export default model<UserModel>("User", userSchema);

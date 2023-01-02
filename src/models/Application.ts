@@ -1,5 +1,6 @@
 import { Schema, model } from "mongoose";
 import { DeploymentModel } from "./Deployment";
+import { UserModel } from "./User";
 
 export interface ApplicationModel {
   _id: string;
@@ -12,7 +13,7 @@ export interface ApplicationModel {
   volumes: string[];
   deployment: string | DeploymentModel;
   status: string;
-  createdby: string;
+  createdby: string | UserModel;
 }
 
 const applicationSchema = new Schema(
@@ -45,7 +46,7 @@ const applicationSchema = new Schema(
     deployment: {
       type: Schema.Types.ObjectId,
       ref: "Deployment",
-      default: null,
+      required: true,
     },
     status: {
       type: String,
