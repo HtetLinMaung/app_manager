@@ -10,7 +10,7 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
   ContainerData,
   {
     afterFunctionStart: async (req, res) => {
-      await handleAuthorization(req);
+      (req as any).payload = await handleAuthorization(req);
       await connectMongoose();
     },
     beforeUpdate: async (data: ContainerDataModel, req, res) => {

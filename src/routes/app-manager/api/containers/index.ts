@@ -10,7 +10,7 @@ export default brewExpressFuncCreateOrFindAll(
   ContainerData,
   {
     afterFunctionStart: async (req, res) => {
-      await handleAuthorization(req);
+      (req as any).payload = await handleAuthorization(req);
       await connectMongoose();
     },
     beforeQuery: async (options, req, res) => {
@@ -31,7 +31,11 @@ export default brewExpressFuncCreateOrFindAll(
         environments: data.environments,
         volumes: data.volumes,
       });
-      await container.run();
+      try {
+        await container.run();
+      } catch (err) {
+        console.log(err.message);
+      }
     },
     beforeResponse: (defaultBody, req, res) => {
       const method = req.method.toLowerCase();
