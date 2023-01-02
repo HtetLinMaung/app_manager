@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { ContainerDataModel } from "./ContainerData";
 import { DeploymentModel } from "./Deployment";
 import { UserModel } from "./User";
 
@@ -8,11 +9,8 @@ export interface ApplicationModel {
   name: string;
   version: string;
   git: string;
-  port: string;
-  environments: any;
-  volumes: string[];
   deployment: string | DeploymentModel;
-  status: string;
+  container: string | ContainerDataModel;
   createdby: string | UserModel;
 }
 
@@ -34,24 +32,15 @@ const applicationSchema = new Schema(
       type: String,
       required: true,
     },
-    port: {
-      type: String,
-      default: "",
-    },
-    environments: {
-      type: Schema.Types.Mixed,
-      default: {},
-    },
-    volumes: [String],
     deployment: {
       type: Schema.Types.ObjectId,
       ref: "Deployment",
       required: true,
     },
-    status: {
-      type: String,
-      default: "stop",
-      enum: ["start", "stop", "deploy", "restart", "ready"],
+    container: {
+      type: Schema.Types.ObjectId,
+      ref: "ContainerData",
+      required: true,
     },
     createdby: {
       type: Schema.Types.ObjectId,

@@ -8,9 +8,10 @@ import path from "node:path";
 import fs from "node:fs";
 import connectMongoose from "../../../../../../utils/connect-mongoose";
 import { buildImage, Container } from "starless-docker";
-import { DeploymentModel } from "../../../../../../models/Deployment";
+import Deployment from "../../../../../../models/Deployment";
 import ApplicationVersion from "../../../../../../models/ApplicationVersion";
 import handleAuthorization from "../../../../../../utils/handle-authorization";
+import ContainerData from "../../../../../../models/ContainerData";
 
 const build = async (
   application: ApplicationModel,
@@ -40,7 +41,7 @@ const build = async (
     console.log(cmdResult.stdout);
   }
 
-  const deployment = application.deployment as DeploymentModel;
+  const deployment = await Deployment.findById(application.deployment);
   if (!fs.existsSync(path.join(sourceFolderPath, "Dockerfile"))) {
     fs.writeFileSync(
       path.join(sourceFolderPath, "Dockerfile"),
@@ -52,7 +53,7 @@ const build = async (
   }
 
   let stdout = await buildImage({
-    image: application.name,
+    image: application.ref,
     tag: version,
     cwd: sourceFolderPath,
   });
@@ -92,50 +93,51 @@ export default brewBlankExpressFunc(async (req, res) => {
   }
   const application = await Application.findOne({
     ref,
-  }).populate("deployment");
+  });
   if (!application) {
     return res.status(404).json({
       code: 404,
       message: "Application not found!",
     });
   }
+  const containerData = await ContainerData.findById(application.container);
 
   const version = req.query.version as string;
   const container = new Container({
-    name: application.name,
-    image: application.name,
+    name: containerData.name,
+    image: containerData.image,
     tag: version,
     autoRemove: true,
     detach: true,
-    network: process.env.docker_network,
-    publish: application.port,
-    environments: application.environments,
-    volumes: application.volumes,
+    network: containerData.network,
+    publish: containerData.port,
+    environments: containerData.environments,
+    volumes: containerData.volumes,
   });
   let message = "";
   if (action == "build") {
     await build(application, version, userId);
     message = `Application build successful.`;
   } else if (action == "deploy") {
-    application.status = "deploy";
-    await application.save();
-    if (version == application.version) {
-      return res.status(400).json({
-        code: 400,
-        message: `Version ${version} already deployed.`,
-      });
-    }
+    containerData.status = "deploy";
+    await containerData.save();
+    // if (version == application.version) {
+    //   return res.status(400).json({
+    //     code: 400,
+    //     message: `Version ${version} already deployed.`,
+    //   });
+    // }
 
     const oldContainer = new Container({
-      name: application.name,
-      image: application.name,
-      tag: application.version,
+      name: containerData.name,
+      image: containerData.image,
+      tag: containerData.tag,
       autoRemove: true,
       detach: true,
-      network: process.env.docker_network,
-      publish: application.port,
-      environments: application.environments,
-      volumes: application.volumes,
+      network: containerData.network,
+      publish: containerData.port,
+      environments: containerData.environments,
+      volumes: containerData.volumes,
     });
     try {
       await oldContainer.stop();
@@ -148,8 +150,8 @@ export default brewBlankExpressFunc(async (req, res) => {
     } catch (err) {
       console.log(err);
     }
-    application.status = "stop";
-    await application.save();
+    containerData.status = "stop";
+    await containerData.save();
 
     await build(application, version, userId);
 
@@ -157,56 +159,58 @@ export default brewBlankExpressFunc(async (req, res) => {
     if (stdout) {
       console.log(stdout);
     }
-    application.status = "ready";
+    containerData.status = "ready";
+    containerData.tag = version;
+    await containerData.save();
     application.version = version;
     await application.save();
     message = "Deployment successful.";
   } else if (action == "start") {
-    application.status = "start";
-    await application.save();
+    containerData.status = "start";
+    await containerData.save();
     try {
       await container.stop();
     } catch (err) {
       console.log(err);
     }
-    application.status = "stop";
-    await application.save();
+    containerData.status = "stop";
+    await containerData.save();
     const stdout = await container.run();
     if (stdout) {
       console.log(stdout);
     }
-    application.status = "ready";
-    await application.save();
+    containerData.status = "ready";
+    await containerData.save();
     message = `Application start successful.`;
   } else if (action == "stop") {
     const stdout = await container.stop();
     if (stdout) {
       console.log(stdout);
     }
-    application.status = "stop";
-    await application.save();
+    containerData.status = "stop";
+    await containerData.save();
     message = `Application stop successful.`;
   } else if (action == "restart") {
-    application.status = "restart";
-    await application.save();
+    containerData.status = "restart";
+    await containerData.save();
     const stdout = await container.restart();
     if (stdout) {
       console.log(stdout);
     }
-    application.status = "ready";
-    await application.save();
+    containerData.status = "ready";
+    await containerData.save();
     message = `Application restart successful.`;
   } else if (action == "change-version") {
     const oldContainer = new Container({
-      name: application.name,
-      image: application.name,
-      tag: application.version,
+      name: containerData.name,
+      image: containerData.image,
+      tag: containerData.tag,
       autoRemove: true,
       detach: true,
-      network: process.env.docker_network,
-      publish: application.port,
-      environments: application.environments,
-      volumes: application.volumes,
+      network: containerData.network,
+      publish: containerData.port,
+      environments: containerData.environments,
+      volumes: containerData.volumes,
     });
     try {
       await oldContainer.stop();
@@ -218,14 +222,16 @@ export default brewBlankExpressFunc(async (req, res) => {
     } catch (err) {
       console.log(err);
     }
-    // await timeout(3);
-    application.status = "stop";
-    await application.save();
+
+    containerData.status = "stop";
+    await containerData.save();
     let stdout = await container.run();
     if (stdout) {
       console.log(stdout);
     }
-    application.status = "ready";
+    containerData.status = "ready";
+    containerData.tag = version;
+    await containerData.save();
     application.version = version;
     await application.save();
     message = `Version changed successful.`;

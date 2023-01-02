@@ -11,20 +11,16 @@ import { createNetwork } from "starless-docker";
 import connectRedis from "./utils/connect-redis";
 import { redisClient } from "starless-redis";
 import initDatabaseTemplates from "./data/database-templates";
+import ContainerData from "./models/ContainerData";
 
 export const afterMasterProcessStart = async () => {
   if (!fs.existsSync(sourcesFolderPath)) {
     fs.mkdirSync(sourcesFolderPath);
   }
-  try {
-    await createNetwork({
-      name: process.env.docker_network,
-    });
-  } catch (err) {
-    console.log(err);
-  }
   await connectMongoose();
   await connectRedis();
+  // await Application.deleteMany({});
+  // await ContainerData.deleteMany({});
 
   const username = process.env.admin_username || "admin";
   const password =

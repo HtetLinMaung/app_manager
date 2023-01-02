@@ -4,6 +4,7 @@ import Application, {
   ApplicationModel,
 } from "../../../../../models/Application";
 import ApplicationVersion from "../../../../../models/ApplicationVersion";
+import ContainerData from "../../../../../models/ContainerData";
 import connectMongoose from "../../../../../utils/connect-mongoose";
 import handleAuthorization from "../../../../../utils/handle-authorization";
 
@@ -14,29 +15,47 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
       (req as any).payload = await handleAuthorization(req);
       await connectMongoose();
     },
-    beforeUpdate(data, req, res) {
+    beforeUpdate: async (data: ApplicationModel, req, res) => {
+      await ContainerData.updateOne(
+        { _id: data.container },
+        {
+          $set: {
+            port: req.body.port,
+            environments: req.body.environments,
+            volumes: req.body.volumes,
+            network: req.body.network,
+          },
+        }
+      );
+      if (req.body.container) {
+        delete req.body.container;
+      }
       if (req.body.version) {
         delete req.body.version;
       }
-      req.body.ref = req.body.name.trim().replace(/\s+/g, "-");
+      if (req.body.ref) {
+        delete req.body.ref;
+      }
     },
     beforeDelete: async (data: ApplicationModel, req, res) => {
+      const containerData = await ContainerData.findById(data.container);
       const container = new Container({
-        name: data.name,
-        image: data.name,
-        tag: data.version,
+        name: containerData.name,
+        image: containerData.image,
+        tag: containerData.tag,
         autoRemove: true,
         detach: true,
-        network: process.env.docker_network,
-        publish: data.port,
-        environments: data.environments,
-        volumes: data.volumes,
+        network: containerData.network,
+        publish: containerData.port,
+        environments: containerData.environments,
+        volumes: containerData.volumes,
       });
       try {
         await container.stop();
       } catch (err) {
         console.log(err.message);
       }
+      await containerData.remove();
       await ApplicationVersion.deleteMany({
         application: data._id,
       });
@@ -53,6 +72,9 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
         defaultBody["versions"] = await ApplicationVersion.find({
           application: defaultBody.data._id,
         }).sort({ createdAt: -1 });
+        defaultBody["container"] = await ContainerData.findById(
+          defaultBody.data.container
+        );
       }
       return defaultBody;
     },
