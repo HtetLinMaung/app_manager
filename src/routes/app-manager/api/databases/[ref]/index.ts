@@ -1,30 +1,27 @@
 import { brewExpressFuncFindOneOrUpdateOrDeleteByParam } from "code-alchemy";
 import { Container } from "starless-docker";
-import Application, {
-  ApplicationModel,
-} from "../../../../../models/Application";
-import ApplicationVersion from "../../../../../models/ApplicationVersion";
+import Database, { DatabaseModel } from "../../../../../models/Database";
 import connectMongoose from "../../../../../utils/connect-mongoose";
 import handleAuthorization from "../../../../../utils/handle-authorization";
 
 export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
-  Application,
+  Database,
   {
     afterFunctionStart: async (req, res) => {
       (req as any).payload = await handleAuthorization(req);
       await connectMongoose();
     },
     beforeUpdate(data, req, res) {
-      if (req.body.version) {
-        delete req.body.version;
+      if (req.body.tag) {
+        delete req.body.tag;
       }
       req.body.ref = req.body.name.trim().replace(/\s+/g, "-");
     },
-    beforeDelete: async (data: ApplicationModel, req, res) => {
+    beforeDelete: async (data: DatabaseModel, req, res) => {
       const container = new Container({
-        name: data.name,
+        name: `database_${data.ref}`,
         image: data.name,
-        tag: data.version,
+        tag: data.tag,
         autoRemove: true,
         detach: true,
         network: process.env.docker_network,
@@ -37,9 +34,6 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
       } catch (err) {
         console.log(err.message);
       }
-      await ApplicationVersion.deleteMany({
-        application: data._id,
-      });
     },
     beforeQuery: async (options, req, res) => {
       const { username, userId } = (req as any).payload;
@@ -47,17 +41,8 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
         options["createdby"] = userId;
       }
     },
-    beforeResponse: async (defaultBody, req, res) => {
-      const method = req.method.toLowerCase();
-      if (method == "get") {
-        defaultBody["versions"] = await ApplicationVersion.find({
-          application: defaultBody.data._id,
-        }).sort({ createdAt: -1 });
-      }
-      return defaultBody;
-    },
   },
-  "Application not found!",
+  "Database not found!",
   "ref",
   "mongoose"
 );

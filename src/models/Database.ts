@@ -1,9 +1,11 @@
 import { Schema, model } from "mongoose";
 
-export interface Database {
+export interface DatabaseModel {
   _id: string;
+  ref: string;
   name: string;
-  version: string;
+  image: string;
+  tag: string;
   port: string;
   environments: any;
   volumes: string[];
@@ -12,11 +14,19 @@ export interface Database {
 
 const databaseSchema = new Schema(
   {
+    ref: {
+      type: String,
+      required: true,
+    },
     name: {
       type: String,
       required: true,
     },
-    version: {
+    image: {
+      type: String,
+      required: true,
+    },
+    tag: {
       type: String,
       required: true,
     },
@@ -29,15 +39,15 @@ const databaseSchema = new Schema(
       default: {},
     },
     volumes: [String],
-    // deployment: {
-    //   type: Schema.Types.ObjectId,
-    //   ref: "Deployment",
-    //   required: true,
-    // },
     status: {
       type: String,
       default: "stop",
-      enum: ["stop", "start", "ready"],
+      enum: ["start", "stop", "restart", "ready"],
+    },
+    createdby: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
   },
   {
@@ -45,7 +55,7 @@ const databaseSchema = new Schema(
   }
 );
 
-databaseSchema.index({ name: 1, version: 1 }, { unique: true });
+databaseSchema.index({ ref: 1, ame: 1, version: 1 }, { unique: true });
 databaseSchema.index({ "$**": "text" });
 
-export default model<Database>("Database", databaseSchema);
+export default model<DatabaseModel>("Database", databaseSchema);

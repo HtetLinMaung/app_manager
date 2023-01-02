@@ -45,6 +45,7 @@ const applicationSchema = new Schema(
     deployment: {
       type: Schema.Types.ObjectId,
       ref: "Deployment",
+      default: null,
     },
     status: {
       type: String,

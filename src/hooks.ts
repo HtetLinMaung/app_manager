@@ -10,6 +10,7 @@ import crypto from "node:crypto";
 import { createNetwork } from "starless-docker";
 import connectRedis from "./utils/connect-redis";
 import { redisClient } from "starless-redis";
+import initDatabaseTemplates from "./data/database-template";
 
 export const afterMasterProcessStart = async () => {
   if (!fs.existsSync(sourcesFolderPath)) {
@@ -43,6 +44,7 @@ export const afterMasterProcessStart = async () => {
   await user.save();
   await redisClient.setJson(`user:username=${username}`, user, { EX: 3 * 60 });
   await initDeployments(user._id);
+  await initDatabaseTemplates(user._id);
 
   // const application = await Application.findOne({ ref: "nodetest" });
   // if (!application) {

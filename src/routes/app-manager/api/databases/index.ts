@@ -1,41 +1,53 @@
-import { brewBlankExpressFunc } from "code-alchemy";
-import { exec } from "code-alchemy/child_process";
-import Database from "../../../../models/Database";
+import { brewExpressFuncCreateOrFindAll } from "code-alchemy";
+import { Container } from "starless-docker";
+import Database, { DatabaseModel } from "../../../../models/Database";
 import connectMongoose from "../../../../utils/connect-mongoose";
+import handleAuthorization from "../../../../utils/handle-authorization";
 
-export default brewBlankExpressFunc(async (req, res) => {
-  await connectMongoose();
-  const method = req.method.toLowerCase();
-  if (method == "post") {
-    const database = new Database(req.body);
-    await database.save();
-    const { stdout, stderr } = await exec(
-      `docker run --rm -d --network=${process.env.docker_network} --name ${
-        database.name
-      } ${database.port ? `-p ${database.port}` : ""} ${Object.entries(
-        database.environments
-      )
-        .map(([k, v]) => `-e ${k}=${v}`)
-        .join(" ")} ${database.volumes.map((v) => `-v ${v}`).join(" ")} ${
-        database.name
-      }:${database.version}`
-    );
-    if (stderr) {
-      const err: any = new Error(stderr);
-      err.status = 500;
-      err.body = {
-        code: err.status,
-        message: err.message,
+export default brewExpressFuncCreateOrFindAll(
+  Database,
+  {
+    afterFunctionStart: async (req, res) => {
+      (req as any).payload = await handleAuthorization(req);
+      await connectMongoose();
+    },
+    beforeCreate(req, res) {
+      req.body.ref = req.body.name.trim().replace(/\s+/g, "_");
+    },
+    afterCreate: async (data: DatabaseModel, req, res) => {
+      const container = new Container({
+        name: `database_${data.ref}`,
+        image: data.image,
+        tag: data.tag,
+        autoRemove: true,
+        detach: true,
+        network: process.env.docker_network,
+        publish: data.port,
+        environments: data.environments,
+        volumes: data.volumes,
+      });
+      await container.run();
+      await Database.updateOne(
+        { _id: data._id },
+        { $set: { status: "ready" } }
+      );
+    },
+    beforeQuery: async (options, req, res) => {
+      const { username, userId } = (req as any).payload;
+      if (username != (process.env.admin_username || "admin")) {
+        options["createdby"] = userId;
+      }
+    },
+    beforeResponse: (defaultBody, req, res) => {
+      const method = req.method.toLowerCase();
+      return {
+        ...defaultBody,
+        message:
+          method == "get"
+            ? "Databases fetched successful."
+            : "Database created successful.",
       };
-      throw err;
-    }
-    if (stdout) {
-      console.log(stdout);
-    }
-    res.status(201).json({
-      code: 201,
-      message: "Database created successful.",
-      data: database,
-    });
-  }
-});
+    },
+  },
+  "mongoose"
+);
