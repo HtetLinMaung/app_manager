@@ -15,7 +15,7 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
       if (req.body.tag) {
         delete req.body.tag;
       }
-      req.body.ref = req.body.name.trim().replace(/\s+/g, "-");
+      req.body.ref = req.body.name.trim().replace(/\s+/g, "_");
     },
     beforeDelete: async (data: DatabaseModel, req, res) => {
       const container = new Container({
