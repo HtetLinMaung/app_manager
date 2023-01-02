@@ -1,21 +1,11 @@
 import { brewBlankExpressFunc } from "code-alchemy";
-import Application, {
-  ApplicationModel,
-} from "../../../../../../models/Application";
-import { exec } from "code-alchemy/child_process";
-import { sourcesFolderPath } from "../../../../../../constants";
-import path from "node:path";
-import fs from "node:fs";
 import connectMongoose from "../../../../../../utils/connect-mongoose";
-import { buildImage, Container } from "starless-docker";
-import { DeploymentModel } from "../../../../../../models/Deployment";
-import ApplicationVersion from "../../../../../../models/ApplicationVersion";
+import { Container } from "starless-docker";
 import handleAuthorization from "../../../../../../utils/handle-authorization";
 import Database from "../../../../../../models/Database";
-import DatabaseTemplate from "../../../../../../models/DatabaseTemplate";
 
 export default brewBlankExpressFunc(async (req, res) => {
-  const { userId } = await handleAuthorization(req);
+  await handleAuthorization(req);
   await connectMongoose();
   const { ref, action } = req.params;
   if (

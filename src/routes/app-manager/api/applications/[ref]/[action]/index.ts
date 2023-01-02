@@ -11,7 +11,6 @@ import { buildImage, Container } from "starless-docker";
 import { DeploymentModel } from "../../../../../../models/Deployment";
 import ApplicationVersion from "../../../../../../models/ApplicationVersion";
 import handleAuthorization from "../../../../../../utils/handle-authorization";
-import { timeout } from "starless-async";
 
 const build = async (
   application: ApplicationModel,
