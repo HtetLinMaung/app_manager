@@ -35,7 +35,7 @@ export default brewExpressFuncCreateOrFindAll(
       await new DatabaseVersion({
         datbase: data._id,
         tag: data.tag,
-        createdby: data.createdby,
+        createdby: req.body.createdby,
       }).save();
     },
     beforeQuery: async (options, req, res) => {
