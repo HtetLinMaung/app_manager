@@ -6,4 +6,21 @@ services:
     build: .
     ports:
       - "7070:3000"
-    
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - connection_string=mongodb://mongo:27017/appmanagerdb
+      - docker_network=appmanagernet
+      - express_handler_mode=native
+      - admin_password=User@123
+      - jwt_secret=971bdbbf2f9aabaa
+  mongo:
+    image: mongo
+    restart: always
+    # ports:
+    #   - "27018:27017"
+    volumes:
+      - appmgrdb:/data/db
+
+volumes:
+  appmgrdb:
