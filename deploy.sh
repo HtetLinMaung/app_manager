@@ -1,0 +1,1 @@
+docker-compose down && git pull && docker rm -f htetlinmaung/app_manager && docker-compose up -d
