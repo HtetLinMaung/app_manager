@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   app_manager:
+    restart: always
     image: htetlinmaung/app_manager
     build: .
     ports:
@@ -14,6 +15,7 @@ services:
       - express_handler_mode=native
       - admin_password=User@123
       - jwt_secret=971bdbbf2f9aabaa
+      - redis_url=redis://redis:6379
   mongo:
     image: mongo
     restart: always
@@ -21,6 +23,9 @@ services:
     #   - "27018:27017"
     volumes:
       - appmgrdb:/data/db
+  redis:
+    image: redis:alpine
+    restart: always
 
 volumes:
   appmgrdb:
