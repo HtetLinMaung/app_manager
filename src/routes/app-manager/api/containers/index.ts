@@ -36,6 +36,17 @@ export default brewExpressFuncCreateOrFindAll(
       } catch (err) {
         console.log(err.message);
       }
+
+      await ContainerData.updateOne(
+        {
+          _id: data._id,
+        },
+        {
+          $set: {
+            status: "ready",
+          },
+        }
+      );
     },
     beforeResponse: (defaultBody, req, res) => {
       const method = req.method.toLowerCase();

@@ -77,11 +77,16 @@ export default brewBlankExpressFunc(async (req, res) => {
     await containerData.save();
     message = `Container restart successful.`;
   } else if (action == "logs") {
-    const stdout = await container.logs();
+    let data = "";
+    try {
+      data = await container.logs();
+    } catch (err) {
+      data = err.message;
+    }
     return res.json({
       code: 200,
       message: "Logs fetched successful.",
-      data: stdout,
+      data,
     });
   }
   res.json({
