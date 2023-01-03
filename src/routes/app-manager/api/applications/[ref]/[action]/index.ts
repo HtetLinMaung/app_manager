@@ -113,6 +113,7 @@ export default brewBlankExpressFunc(async (req, res) => {
     publish: containerData.port,
     environments: containerData.environments,
     volumes: containerData.volumes,
+    log: true,
   });
   let message = "";
   if (action == "build") {
@@ -156,10 +157,7 @@ export default brewBlankExpressFunc(async (req, res) => {
     await build(application, version, userId);
 
     try {
-      const stdout = await container.run();
-      if (stdout) {
-        console.log(stdout);
-      }
+      await container.run();
     } catch (err) {
       console.log(err.message);
     }
@@ -180,10 +178,7 @@ export default brewBlankExpressFunc(async (req, res) => {
     containerData.status = "stop";
     await containerData.save();
     try {
-      const stdout = await container.run();
-      if (stdout) {
-        console.log(stdout);
-      }
+      await container.run();
     } catch (err) {
       console.log(err.message);
     }
@@ -191,20 +186,14 @@ export default brewBlankExpressFunc(async (req, res) => {
     await containerData.save();
     message = `Application start successful.`;
   } else if (action == "stop") {
-    const stdout = await container.stop();
-    if (stdout) {
-      console.log(stdout);
-    }
+    await container.stop();
     containerData.status = "stop";
     await containerData.save();
     message = `Application stop successful.`;
   } else if (action == "restart") {
     containerData.status = "restart";
     await containerData.save();
-    const stdout = await container.restart();
-    if (stdout) {
-      console.log(stdout);
-    }
+    await container.restart();
     containerData.status = "ready";
     await containerData.save();
     message = `Application restart successful.`;
@@ -234,10 +223,7 @@ export default brewBlankExpressFunc(async (req, res) => {
     containerData.status = "stop";
     await containerData.save();
     try {
-      const stdout = await container.run();
-      if (stdout) {
-        console.log(stdout);
-      }
+      await container.run();
     } catch (err) {
       console.log(err.message);
     }
@@ -248,11 +234,11 @@ export default brewBlankExpressFunc(async (req, res) => {
     await application.save();
     message = `Version changed successful.`;
   } else if (action == "logs") {
-    const stdout = await container.logs();
+    const result = await container.logs();
     return res.json({
       code: 200,
       message: "Logs fetched successful.",
-      data: stdout,
+      data: result,
     });
   }
   res.json({
