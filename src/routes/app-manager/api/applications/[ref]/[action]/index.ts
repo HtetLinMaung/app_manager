@@ -269,7 +269,7 @@ export default brewBlankExpressFunc(async (req, res) => {
     let data = null;
     if (typeof resultOrChild != "string") {
       server.sharedMemory.set(
-        containerData._id,
+        application.ref,
         (resultOrChild as ChildProcessWithoutNullStreams).pid
       );
     } else {
@@ -282,7 +282,7 @@ export default brewBlankExpressFunc(async (req, res) => {
       data,
     });
   } else if (action == "cancel-logs-stream") {
-    const pid = server.sharedMemory.get(containerData._id);
+    const pid = server.sharedMemory.get(application.ref);
     if (!pid) {
       return res.status(404).json({
         code: 404,
