@@ -74,5 +74,6 @@ export const afterSocketIOStart = async (io: any) => {
       console.error(err.message);
       socket.disconnect();
     }
+    next();
   });
 };
