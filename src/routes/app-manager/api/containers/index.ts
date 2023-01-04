@@ -30,6 +30,8 @@ export default brewExpressFuncCreateOrFindAll(
         publish: data.port,
         environments: data.environments,
         volumes: data.volumes,
+        log: true,
+        restartContainer: "always",
       });
       try {
         await container.run();
