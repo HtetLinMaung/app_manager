@@ -7,7 +7,7 @@ import { sourcesFolderPath } from "../../../../../../constants";
 import path from "node:path";
 import fs from "node:fs";
 import connectMongoose from "../../../../../../utils/connect-mongoose";
-import { buildImage, Container, LogOptions } from "starless-docker";
+import { buildImage, Container, LogOptions, runSpawn } from "starless-docker";
 import Deployment from "../../../../../../models/Deployment";
 import ApplicationVersion from "../../../../../../models/ApplicationVersion";
 import handleAuthorization from "../../../../../../utils/handle-authorization";
@@ -21,28 +21,35 @@ const build = async (
   version: string,
   createdby: string
 ) => {
+  const io = server.getIO();
   const sourceFolderPath = path.join(
     sourcesFolderPath,
     path.basename(application.git).replace(".git", "")
   );
 
-  let cmdResult = null;
-  if (fs.existsSync(sourceFolderPath)) {
-    cmdResult = await exec("git pull", {
-      cwd: sourceFolderPath,
-    });
-  } else {
-    cmdResult = await exec(`git clone ${application.git}`, {
-      cwd: sourcesFolderPath,
-    });
-  }
-
-  if (cmdResult.stderr) {
-    console.log(cmdResult.stderr);
-  }
-  if (cmdResult.stdout) {
-    console.log(cmdResult.stdout);
-  }
+  await runSpawn(
+    fs.existsSync(sourceFolderPath)
+      ? "git pull"
+      : `git clone ${application.git}`,
+    {
+      cwd: fs.existsSync(sourceFolderPath)
+        ? sourceFolderPath
+        : sourcesFolderPath,
+    },
+    (stdout, stderr, error, code) => {
+      if (io) {
+        io.to(createdby).emit("deploy", {
+          ref: application.ref,
+          stdout,
+          stderr,
+          error,
+          code,
+        });
+      }
+    },
+    true,
+    true
+  );
 
   const deployment = await Deployment.findById(application.deployment);
   if (!fs.existsSync(path.join(sourceFolderPath, "Dockerfile"))) {
@@ -55,14 +62,26 @@ const build = async (
     );
   }
 
-  let stdout = await buildImage({
-    image: application.ref,
-    tag: version,
-    cwd: sourceFolderPath,
-  });
-  if (stdout) {
-    console.log(stdout);
-  }
+  await buildImage(
+    {
+      image: application.ref,
+      tag: version,
+      cwd: sourceFolderPath,
+      log: true,
+    },
+    (stdout, stderr, error, code) => {
+      if (io) {
+        io.to(createdby).emit("deploy", {
+          ref: application.ref,
+          stdout,
+          stderr,
+          error,
+          code,
+        });
+      }
+    }
+  );
+
   // if (fs.existsSync(sourceFolderPath)) {
   //   fs.rmSync(sourceFolderPath, { recursive: true });
   // }
@@ -82,6 +101,7 @@ const build = async (
 export default brewBlankExpressFunc(async (req, res) => {
   const { userId } = await handleAuthorization(req);
   await connectMongoose();
+  const io = server.getIO();
   const { ref, action } = req.params;
   if (
     action != "start" &&
@@ -149,17 +169,38 @@ export default brewBlankExpressFunc(async (req, res) => {
       publish: containerData.port,
       environments: containerData.environments,
       volumes: containerData.volumes,
+      log: true,
     });
     try {
-      await oldContainer.stop();
+      await oldContainer.stop((stdout, stderr, error, code) => {
+        if (io) {
+          io.to(userId).emit("deploy", {
+            ref: application.ref,
+            stdout,
+            stderr,
+            error,
+            code,
+          });
+        }
+      });
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
 
     try {
-      await container.stop();
+      await container.stop((stdout, stderr, error, code) => {
+        if (io) {
+          io.to(userId).emit("deploy", {
+            ref: application.ref,
+            stdout,
+            stderr,
+            error,
+            code,
+          });
+        }
+      });
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
     containerData.status = "stop";
     await containerData.save();
@@ -167,9 +208,19 @@ export default brewBlankExpressFunc(async (req, res) => {
     await build(application, version, userId);
 
     try {
-      await container.run();
+      await container.run((stdout, stderr, error, code) => {
+        if (io) {
+          io.to(userId).emit("deploy", {
+            ref: application.ref,
+            stdout,
+            stderr,
+            error,
+            code,
+          });
+        }
+      });
     } catch (err) {
-      console.log(err.message);
+      console.error(err.message);
     }
     containerData.status = "ready";
     containerData.tag = version;
