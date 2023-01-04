@@ -7,11 +7,12 @@ import { sourcesFolderPath } from "../../../../../../constants";
 import path from "node:path";
 import fs from "node:fs";
 import connectMongoose from "../../../../../../utils/connect-mongoose";
-import { buildImage, Container } from "starless-docker";
+import { buildImage, Container, LogOptions } from "starless-docker";
 import Deployment from "../../../../../../models/Deployment";
 import ApplicationVersion from "../../../../../../models/ApplicationVersion";
 import handleAuthorization from "../../../../../../utils/handle-authorization";
 import ContainerData from "../../../../../../models/ContainerData";
+import { ChildProcessWithoutNullStreams } from "node:child_process";
 
 const build = async (
   application: ApplicationModel,
@@ -234,11 +235,25 @@ export default brewBlankExpressFunc(async (req, res) => {
     await application.save();
     message = `Version changed successful.`;
   } else if (action == "logs") {
-    const result = await container.logs();
+    const follow = req.query.follow || false;
+    const until = req.query.until || "";
+    const since = req.query.since || "";
+    const resultOrChild = await container.logs(
+      {
+        follow,
+        until,
+        since,
+      } as LogOptions,
+      (stdout, stderr, error, code) => {}
+    );
+
     return res.json({
       code: 200,
       message: "Logs fetched successful.",
-      data: result,
+      data:
+        typeof resultOrChild == "string"
+          ? resultOrChild
+          : (resultOrChild as ChildProcessWithoutNullStreams).pid,
     });
   }
   res.json({

@@ -12,6 +12,7 @@ import connectRedis from "./utils/connect-redis";
 import { redisClient } from "starless-redis";
 import initDatabaseTemplates from "./data/database-templates";
 import ContainerData from "./models/ContainerData";
+import jwt from "jsonwebtoken";
 
 export const afterMasterProcessStart = async () => {
   if (!fs.existsSync(sourcesFolderPath)) {
@@ -55,4 +56,23 @@ export const afterMasterProcessStart = async () => {
   //     deployment: "63ab0457073a89a779d57af9",
   //   }).save();
   // }
+};
+
+export const afterSocketIOStart = async (io: any) => {
+  io.use((socket: any, next: any) => {
+    try {
+      const token: string = socket.handshake.auth.token;
+      console.log(`token: ${token}`);
+      if (!token) {
+        socket.disconnect();
+      }
+      const payload: any = jwt.verify(token, process.env.jwt_secret);
+      console.log("token payload:");
+      console.log(payload);
+      socket.join(payload.userId);
+    } catch (err) {
+      console.error(err.message);
+      socket.disconnect();
+    }
+  });
 };
