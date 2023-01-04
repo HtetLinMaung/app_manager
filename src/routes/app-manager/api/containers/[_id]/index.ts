@@ -27,7 +27,6 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
         environments: data.environments,
         volumes: data.volumes,
         log: true,
-        restartContainer: "always",
       });
       try {
         await container.stop();
@@ -58,7 +57,6 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
         environments: data.environments,
         volumes: data.volumes,
         log: true,
-        restartContainer: "always",
       });
       try {
         await container.run();
@@ -87,7 +85,6 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
         environments: data.environments,
         volumes: data.volumes,
         log: true,
-        restartContainer: "always",
       });
       try {
         await container.stop();

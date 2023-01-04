@@ -31,7 +31,6 @@ export default brewExpressFuncCreateOrFindAll(
         environments: data.environments,
         volumes: data.volumes,
         log: true,
-        restartContainer: "always",
       });
       try {
         await container.run();

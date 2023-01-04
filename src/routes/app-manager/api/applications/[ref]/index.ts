@@ -50,7 +50,6 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
         environments: containerData.environments,
         volumes: containerData.volumes,
         log: true,
-        restartContainer: "always",
       });
       try {
         await container.stop();

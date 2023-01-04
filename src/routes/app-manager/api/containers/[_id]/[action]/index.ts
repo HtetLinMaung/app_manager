@@ -40,7 +40,6 @@ export default brewBlankExpressFunc(async (req, res) => {
     environments: containerData.environments,
     volumes: containerData.volumes,
     log: true,
-    restartContainer: "always",
   });
   let message = "";
   if (action == "start") {
