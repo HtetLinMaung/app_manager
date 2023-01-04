@@ -10,7 +10,7 @@ import kill from "tree-kill";
 export default brewBlankExpressFunc(async (req, res) => {
   const { userId } = await handleAuthorization(req);
   await connectMongoose();
-  const { id, action } = req.params;
+  const { _id: id, action } = req.params;
   if (
     action != "start" &&
     action != "stop" &&
