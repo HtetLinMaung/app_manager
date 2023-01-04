@@ -1,5 +1,7 @@
 import { brewExpressFuncFindOneOrUpdateOrDeleteByParam } from "code-alchemy";
 import { Container } from "starless-docker";
+import Application from "../../../../../models/Application";
+import ApplicationVersion from "../../../../../models/ApplicationVersion";
 import ContainerData, {
   ContainerDataModel,
 } from "../../../../../models/ContainerData";
@@ -34,6 +36,17 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
       }
     },
     afterUpdate: async (data: ContainerDataModel, req, res) => {
+      await Application.updateOne(
+        {
+          container: data._id,
+        },
+        {
+          $set: {
+            ref: data.name,
+            version: data.tag,
+          },
+        }
+      );
       const container = new Container({
         name: data.name,
         image: data.image,
@@ -54,6 +67,15 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
       }
     },
     beforeDelete: async (data: ContainerDataModel, req, res) => {
+      const application = await Application.findOne({
+        container: data._id,
+      });
+      if (application) {
+        await ApplicationVersion.deleteMany({
+          application: application._id,
+        });
+        await application.remove();
+      }
       const container = new Container({
         name: data.name,
         image: data.image,
