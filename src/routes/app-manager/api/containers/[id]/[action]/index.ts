@@ -85,7 +85,7 @@ export default brewBlankExpressFunc(async (req, res) => {
       } as LogOptions,
       (stdout, stderr, error, code) => {
         if (io) {
-          io.to(userId).emit("containers:logs", {
+          io.to(userId).emit("logs", {
             containerId: id,
             stdout,
             stderr,
