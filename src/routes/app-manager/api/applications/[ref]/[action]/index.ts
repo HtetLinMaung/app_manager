@@ -257,7 +257,7 @@ export default brewBlankExpressFunc(async (req, res) => {
       (stdout, stderr, error, code) => {
         if (io) {
           io.to(userId).emit("applications:logs", {
-            containerId: containerData._id,
+            ref: application.ref,
             stdout,
             stderr,
             error: error ? error.message : null,
