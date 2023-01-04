@@ -36,7 +36,7 @@ const build = async (
     (stdout, stderr, error, code) => {
       if (io) {
         io.to(createdby).emit("deploy", {
-          ref: application.ref,
+          containerId: application.container,
           stdout,
           stderr,
           error,
@@ -69,7 +69,7 @@ const build = async (
     (stdout, stderr, error, code) => {
       if (io) {
         io.to(createdby).emit("deploy", {
-          ref: application.ref,
+          containerId: application.container,
           stdout,
           stderr,
           error,
@@ -163,7 +163,7 @@ export default brewBlankExpressFunc(async (req, res) => {
       await oldContainer.stop((stdout, stderr, error, code) => {
         if (io) {
           io.to(userId).emit("deploy", {
-            ref: application.ref,
+            containerId: containerData._id,
             stdout,
             stderr,
             error,
@@ -179,7 +179,7 @@ export default brewBlankExpressFunc(async (req, res) => {
       await container.stop((stdout, stderr, error, code) => {
         if (io) {
           io.to(userId).emit("deploy", {
-            ref: application.ref,
+            containerId: containerData._id,
             stdout,
             stderr,
             error,
@@ -199,7 +199,7 @@ export default brewBlankExpressFunc(async (req, res) => {
       await container.run((stdout, stderr, error, code) => {
         if (io) {
           io.to(userId).emit("deploy", {
-            ref: application.ref,
+            containerId: containerData._id,
             stdout,
             stderr,
             error,
