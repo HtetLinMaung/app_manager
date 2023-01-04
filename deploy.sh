@@ -1,1 +1,1 @@
-docker-compose down && git pull && docker image rm -f htetlinmaung/app_manager && docker-compose up -d
+docker-compose down && git pull && docker image rm -f htetlinmaung/app_manager && docker-compose up -d && docker logs --follow app_manager_app_manager_1
