@@ -69,15 +69,25 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
     },
     beforeResponse: async (defaultBody, req, res) => {
       const method = req.method.toLowerCase();
+      let message = "";
       if (method == "get") {
+        message = "Application fetched successful.";
         defaultBody["versions"] = await ApplicationVersion.find({
           application: defaultBody.data._id,
         }).sort({ createdAt: -1 });
         defaultBody["container"] = await ContainerData.findById(
           defaultBody.data.container
         );
+      } else if (method == "put") {
+        message = "Application updated successful.";
+      } else if (method == "delete") {
+        message = "Application deleted successful.";
       }
-      return defaultBody;
+
+      return {
+        ...defaultBody,
+        message,
+      };
     },
   },
   "Application not found!",

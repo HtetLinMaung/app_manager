@@ -98,6 +98,21 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
         options["createdby"] = userId;
       }
     },
+    beforeResponse: (defaultBody, req, res) => {
+      const method = req.method.toLowerCase();
+      let message = "";
+      if (method == "get") {
+        message = "Container fetched successful.";
+      } else if (method == "put") {
+        message = "Container updated successful.";
+      } else if (method == "delete") {
+        message = "Container deleted successful.";
+      }
+      return {
+        ...defaultBody,
+        message,
+      };
+    },
   },
   "Container not found!",
   "_id",

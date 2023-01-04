@@ -10,6 +10,21 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
       await handleAuthorization(req);
       await connectMongoose();
     },
+    beforeResponse: (defaultBody, req, res) => {
+      const method = req.method.toLowerCase();
+      let message = "";
+      if (method == "get") {
+        message = "Deployment fetched successful.";
+      } else if (method == "put") {
+        message = "Deployment updated successful.";
+      } else if (method == "delete") {
+        message = "Deployment deleted successful.";
+      }
+      return {
+        ...defaultBody,
+        message,
+      };
+    },
   },
   "Deploy not found!",
   "_id",
