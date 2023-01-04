@@ -13,6 +13,8 @@ import ApplicationVersion from "../../../../../../models/ApplicationVersion";
 import handleAuthorization from "../../../../../../utils/handle-authorization";
 import ContainerData from "../../../../../../models/ContainerData";
 import { ChildProcessWithoutNullStreams } from "node:child_process";
+import server from "starless-server";
+import kill from "tree-kill";
 
 const build = async (
   application: ApplicationModel,
@@ -102,6 +104,12 @@ export default brewBlankExpressFunc(async (req, res) => {
     });
   }
   const containerData = await ContainerData.findById(application.container);
+  if (!containerData) {
+    return res.status(404).json({
+      code: 404,
+      message: "Container not found!",
+    });
+  }
 
   const version = req.query.version as string;
   const container = new Container({
@@ -235,25 +243,57 @@ export default brewBlankExpressFunc(async (req, res) => {
     await application.save();
     message = `Version changed successful.`;
   } else if (action == "logs") {
-    const follow = req.query.follow || false;
+    const follow = req.query.follow == "yes" || false;
     const until = req.query.until || "";
     const since = req.query.since || "";
+    const io = server.getIO();
+
     const resultOrChild = await container.logs(
       {
         follow,
         until,
         since,
       } as LogOptions,
-      (stdout, stderr, error, code) => {}
+      (stdout, stderr, error, code) => {
+        if (io) {
+          io.to(userId).emit("applications:logs", {
+            containerId: containerData._id,
+            stdout,
+            stderr,
+            error: error ? error.message : null,
+            code,
+          });
+        }
+      }
     );
+    let data = null;
+    if (typeof resultOrChild != "string") {
+      server.sharedMemory.set(
+        containerData._id,
+        (resultOrChild as ChildProcessWithoutNullStreams).pid
+      );
+    } else {
+      data = resultOrChild;
+    }
 
     return res.json({
       code: 200,
       message: "Logs fetched successful.",
-      data:
-        typeof resultOrChild == "string"
-          ? resultOrChild
-          : (resultOrChild as ChildProcessWithoutNullStreams).pid,
+      data,
+    });
+  } else if (action == "cancel-logs-stream") {
+    const pid = server.sharedMemory.get(containerData._id);
+    if (!pid) {
+      return res.status(404).json({
+        code: 404,
+        message: "Process ID not found!",
+      });
+    }
+
+    kill(pid);
+    return res.json({
+      code: 200,
+      message: `Process ID ${pid} killed successful.`,
     });
   }
   res.json({
