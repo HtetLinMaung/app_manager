@@ -72,7 +72,7 @@ export default brewBlankExpressFunc(async (req, res) => {
     await containerData.save();
     message = `Container restart successful.`;
   } else if (action == "logs") {
-    const follow = req.query.follow || false;
+    const follow = req.query.follow == "yes" || false;
     const until = req.query.until || "";
     const since = req.query.since || "";
     const io = server.getIO();
