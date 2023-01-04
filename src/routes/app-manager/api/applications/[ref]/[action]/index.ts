@@ -90,7 +90,8 @@ export default brewBlankExpressFunc(async (req, res) => {
     action != "deploy" &&
     action != "build" &&
     action != "change-version" &&
-    action != "logs"
+    action != "logs" &&
+    action != "cancel-logs-stream"
   ) {
     return res.sendStatus(404);
   }
