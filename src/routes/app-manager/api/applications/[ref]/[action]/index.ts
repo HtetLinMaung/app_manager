@@ -71,6 +71,7 @@ const build = async (
   }
 
   const deployment = await Deployment.findById(application.deployment);
+  let isDockerFileGenerated = false;
   if (!fs.existsSync(path.join(sourceFolderPath, "Dockerfile"))) {
     fs.writeFileSync(
       path.join(sourceFolderPath, "Dockerfile"),
@@ -79,6 +80,7 @@ const build = async (
         ...deployment.buildSteps,
       ].join("\n\n")
     );
+    isDockerFileGenerated = true;
   }
 
   await buildImage(
@@ -101,9 +103,12 @@ const build = async (
     }
   );
 
-  if (fs.existsSync(sourceFolderPath)) {
-    fs.rmSync(sourceFolderPath, { recursive: true });
+  if (isDockerFileGenerated) {
+    fs.rmSync(path.join(sourceFolderPath, "Dockerfile"));
   }
+  // if (fs.existsSync(sourceFolderPath)) {
+  //   fs.rmSync(sourceFolderPath, { recursive: true });
+  // }
   const applicationVersion = await ApplicationVersion.findOne({
     application: application._id,
     version,
