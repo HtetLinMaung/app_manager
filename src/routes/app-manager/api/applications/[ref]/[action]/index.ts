@@ -65,6 +65,7 @@ const build = async (
       tag: version,
       cwd: sourceFolderPath,
       log: true,
+      waitUntilClose: true,
     },
     (stdout, stderr, error, code) => {
       if (io) {
