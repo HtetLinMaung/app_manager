@@ -32,6 +32,7 @@
     "starless-docker": "^0.1.4",
     "starless-http": "^1.0.1",
     "starless-redis": "^0.0.3",
-    "tree-kill": "^1.2.2"
+    "tree-kill": "^1.2.2",
+    "yaml": "^2.2.1"
   }
 }

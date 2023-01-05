@@ -48,6 +48,28 @@ const build = async (
     true
   );
 
+  if (application.gitbranch) {
+    await runSpawn(
+      `git checkout ${application.gitbranch}`,
+      {
+        cwd: sourceFolderPath,
+      },
+      (stdout, stderr, error, code) => {
+        if (io) {
+          io.to(createdby).emit("deploy", {
+            containerId: application.container,
+            stdout,
+            stderr,
+            error,
+            code,
+          });
+        }
+      },
+      true,
+      true
+    );
+  }
+
   const deployment = await Deployment.findById(application.deployment);
   if (!fs.existsSync(path.join(sourceFolderPath, "Dockerfile"))) {
     fs.writeFileSync(
@@ -79,9 +101,9 @@ const build = async (
     }
   );
 
-  // if (fs.existsSync(sourceFolderPath)) {
-  //   fs.rmSync(sourceFolderPath, { recursive: true });
-  // }
+  if (fs.existsSync(sourceFolderPath)) {
+    fs.rmSync(sourceFolderPath, { recursive: true });
+  }
   const applicationVersion = await ApplicationVersion.findOne({
     application: application._id,
     version,

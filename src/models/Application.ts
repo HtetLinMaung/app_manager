@@ -9,6 +9,7 @@ export interface ApplicationModel {
   name: string;
   version: string;
   git: string;
+  gitbranch: string;
   deployment: string | DeploymentModel;
   container: string | ContainerDataModel;
   createdby: string | UserModel;
@@ -31,6 +32,10 @@ const applicationSchema = new Schema(
     git: {
       type: String,
       required: true,
+    },
+    gitbranch: {
+      type: String,
+      default: "master",
     },
     deployment: {
       type: Schema.Types.ObjectId,
