@@ -2,17 +2,14 @@ import { Request } from "express";
 import jwt from "jsonwebtoken";
 
 export default async function handleAuthorization(req: Request) {
+  let token = "";
   const authHeader = req.get("authorization");
   if (!authHeader) {
-    const err: any = new Error("No auth header!");
-    err.status = 401;
-    err.body = {
-      code: err.status,
-      message: err.message,
-    };
-    throw err;
+    token = req.query.token as string;
+  } else {
+    token = authHeader.replace("Bearer ", "").trim();
   }
-  const token = authHeader.replace("Bearer ", "").trim();
+
   if (!token) {
     const err: any = new Error("Token is required!");
     err.status = 401;
