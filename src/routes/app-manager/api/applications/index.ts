@@ -16,7 +16,9 @@ export default brewExpressFuncCreateOrFindAll(
       req.body.ref = req.body.name.trim().replace(/\s+/g, "-");
       const containerData = new ContainerData({
         name: req.body.ref,
-        image: req.body.ref,
+        image: process.env.docker_username
+          ? `${process.env.docker_username}/${req.body.ref}`
+          : req.body.ref,
         tag: req.body.version,
         port: req.body.port,
         environments: req.body.environments,

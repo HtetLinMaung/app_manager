@@ -20,6 +20,9 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
         { _id: data.container },
         {
           $set: {
+            image: process.env.docker_username
+              ? `${process.env.docker_username}/${data.ref}`
+              : data.ref,
             port: req.body.port,
             environments: req.body.environments,
             volumes: req.body.volumes,

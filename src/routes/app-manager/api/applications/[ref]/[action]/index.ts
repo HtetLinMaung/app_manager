@@ -6,7 +6,13 @@ import { sourcesFolderPath } from "../../../../../../constants";
 import path from "node:path";
 import fs from "node:fs";
 import connectMongoose from "../../../../../../utils/connect-mongoose";
-import { buildImage, Container, runSpawn } from "starless-docker";
+import {
+  buildImage,
+  Container,
+  dockerLogin,
+  pushImage,
+  runSpawn,
+} from "starless-docker";
 import Deployment from "../../../../../../models/Deployment";
 import ApplicationVersion from "../../../../../../models/ApplicationVersion";
 import handleAuthorization from "../../../../../../utils/handle-authorization";
@@ -83,9 +89,12 @@ const build = async (
     isDockerFileGenerated = true;
   }
 
+  const imageName = process.env.docker_username
+    ? `${process.env.docker_username}/${application.ref}`
+    : application.ref;
   await buildImage(
     {
-      image: application.ref,
+      image: imageName,
       tag: version,
       cwd: sourceFolderPath,
       log: true,
@@ -106,6 +115,14 @@ const build = async (
   if (isDockerFileGenerated) {
     fs.rmSync(path.join(sourceFolderPath, "Dockerfile"));
   }
+  dockerLogin(
+    process.env.docker_username,
+    Buffer.from(process.env.docker_password, "base64").toString("utf-8"),
+    () => {},
+    true
+  ).then(() => {
+    pushImage(`${imageName}:${version}`, () => {}, true);
+  });
   // if (fs.existsSync(sourceFolderPath)) {
   //   fs.rmSync(sourceFolderPath, { recursive: true });
   // }

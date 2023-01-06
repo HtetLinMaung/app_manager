@@ -16,6 +16,8 @@ services:
       - admin_password=User@123
       - jwt_secret=971bdbbf2f9aabaa
       - redis_url=redis://redis:6379
+      - docker_username=htetlinmaung
+      - docker_password=LW0gZG9ja2VyMjU1MTk5Ngo=
   mongo:
     image: mongo
     restart: always

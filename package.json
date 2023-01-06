@@ -29,7 +29,7 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.8.1",
     "starless-async": "^1.1.2",
-    "starless-docker": "^0.1.4",
+    "starless-docker": "^0.1.5",
     "starless-http": "^1.0.1",
     "starless-redis": "^0.0.3",
     "tree-kill": "^1.2.2",
