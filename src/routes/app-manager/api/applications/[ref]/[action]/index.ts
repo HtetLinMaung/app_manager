@@ -321,7 +321,7 @@ export default brewBlankExpressFunc(async (req, res) => {
           image: `${cd.image}:${cd.tag}`,
         };
         if (cd.port) {
-          composeJson.services[cd.name]["ports"] = [`"${cd.port}"`];
+          composeJson.services[cd.name]["ports"] = [cd.port];
         }
         if (cd.volumes.length) {
           composeJson.services[cd.name]["volumes"] = cd.volumes;
