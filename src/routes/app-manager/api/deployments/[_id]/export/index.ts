@@ -4,7 +4,7 @@ import connectMongoose from "../../../../../../utils/connect-mongoose";
 import handleAuthorization from "../../../../../../utils/handle-authorization";
 
 export default brewBlankExpressFunc(async (req, res) => {
-  await handleAuthorization();
+  await handleAuthorization(req);
   await connectMongoose();
   const deployment = await Deployment.findById(req.params._id);
   if (!deployment) {
