@@ -332,8 +332,10 @@ export default brewBlankExpressFunc(async (req, res) => {
             }
           }
         }
-        if (cd.environments.length) {
-          composeJson.services[cd.name]["environment"] = cd.environments;
+        if (Object.keys(cd.environments).length) {
+          composeJson.services[cd.name]["environment"] = Object.entries(
+            cd.environments
+          ).map((k, v) => `${k}=${v}`);
         }
       }
       res.setHeader(
