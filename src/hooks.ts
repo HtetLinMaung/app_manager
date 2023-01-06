@@ -1,6 +1,6 @@
 import { exec } from "code-alchemy/child_process";
 import fs from "node:fs";
-import { sourcesFolderPath } from "./constants";
+import { sourcesFolderPath, tempFolderPath } from "./constants";
 import initDeployments from "./data/deployments";
 import Application from "./models/Application";
 import User from "./models/User";
@@ -17,6 +17,9 @@ import jwt from "jsonwebtoken";
 export const afterMasterProcessStart = async () => {
   if (!fs.existsSync(sourcesFolderPath)) {
     fs.mkdirSync(sourcesFolderPath);
+  }
+  if (!fs.existsSync(tempFolderPath)) {
+    fs.mkdirSync(tempFolderPath);
   }
   await connectMongoose();
   await connectRedis();

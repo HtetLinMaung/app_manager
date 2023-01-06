@@ -2,7 +2,7 @@ import { brewBlankExpressFunc } from "code-alchemy";
 import Application, {
   ApplicationModel,
 } from "../../../../../../models/Application";
-import { sourcesFolderPath } from "../../../../../../constants";
+import { sourcesFolderPath, tempFolderPath } from "../../../../../../constants";
 import path from "node:path";
 import fs from "node:fs";
 import connectMongoose from "../../../../../../utils/connect-mongoose";
@@ -12,12 +12,14 @@ import {
   dockerLogin,
   pushImage,
   runSpawn,
+  saveImage,
 } from "starless-docker";
 import Deployment from "../../../../../../models/Deployment";
 import ApplicationVersion from "../../../../../../models/ApplicationVersion";
 import handleAuthorization from "../../../../../../utils/handle-authorization";
 import ContainerData from "../../../../../../models/ContainerData";
 import server from "starless-server";
+import yaml from "yaml";
 
 const build = async (
   application: ApplicationModel,
@@ -144,7 +146,12 @@ export default brewBlankExpressFunc(async (req, res) => {
   await connectMongoose();
   const io = server.getIO();
   const { ref, action } = req.params;
-  if (action != "deploy" && action != "build" && action != "change-version") {
+  if (
+    action != "deploy" &&
+    action != "build" &&
+    action != "change-version" &&
+    action != "export"
+  ) {
     return res.sendStatus(404);
   }
   const application = await Application.findOne({
@@ -297,6 +304,62 @@ export default brewBlankExpressFunc(async (req, res) => {
     application.version = version;
     await application.save();
     message = `Version changed successful.`;
+  } else if (action == "export") {
+    const { type } = req.query;
+
+    if (type == "docker-compose") {
+      const composeJson: any = {
+        version: "3.9",
+        services: {},
+        volumes: {},
+      };
+      const cds = await ContainerData.find({
+        network: containerData.network,
+      });
+      for (const cd of cds) {
+        composeJson.services[application.ref] = {
+          image: `${cd.image}:${cd.tag}`,
+        };
+        if (cd.port) {
+          composeJson.services[application.ref]["ports"] = [`"${cd.port}"`];
+        }
+        if (cd.volumes.length) {
+          composeJson.services[application.ref]["volumes"] = cd.volumes;
+          for (const v of cd.volumes) {
+            const [source] = v.split(":");
+            if (!["/", "\\"].includes(source)) {
+              composeJson.volumes[source] = {};
+            }
+          }
+        }
+        if (cd.environments.length) {
+          composeJson.services[application.ref]["environment"] =
+            cd.environments;
+        }
+      }
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=${application.ref}-compose.yml`
+      );
+      res.write(yaml.stringify(composeJson));
+    } else if (type == "tar") {
+      await saveImage(
+        `${containerData.image}:${containerData.tag}`,
+        `${application.ref}.tar`,
+        { cwd: tempFolderPath },
+        () => {},
+        true
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=${application.ref}.tar`
+      );
+      res.write(
+        fs.readFileSync(path.join(tempFolderPath, `${application.ref}.tar`))
+      );
+    }
+
+    return res.end();
   }
   res.json({
     code: 200,
