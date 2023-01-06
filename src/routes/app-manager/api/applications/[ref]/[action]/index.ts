@@ -335,7 +335,7 @@ export default brewBlankExpressFunc(async (req, res) => {
         if (Object.keys(cd.environments).length) {
           composeJson.services[cd.name]["environment"] = Object.entries(
             cd.environments
-          ).map((k, v) => `${k}=${v}`);
+          ).map(([k, v]) => `${k}=${v}`);
         }
       }
       res.setHeader(
