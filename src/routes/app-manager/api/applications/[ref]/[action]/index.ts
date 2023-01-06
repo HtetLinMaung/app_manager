@@ -317,14 +317,14 @@ export default brewBlankExpressFunc(async (req, res) => {
         network: containerData.network,
       });
       for (const cd of cds) {
-        composeJson.services[application.ref] = {
+        composeJson.services[cd.name] = {
           image: `${cd.image}:${cd.tag}`,
         };
         if (cd.port) {
-          composeJson.services[application.ref]["ports"] = [`"${cd.port}"`];
+          composeJson.services[cd.name]["ports"] = [`"${cd.port}"`];
         }
         if (cd.volumes.length) {
-          composeJson.services[application.ref]["volumes"] = cd.volumes;
+          composeJson.services[cd.name]["volumes"] = cd.volumes;
           for (const v of cd.volumes) {
             const [source] = v.split(":");
             if (!["/", "\\"].includes(source)) {
@@ -333,8 +333,7 @@ export default brewBlankExpressFunc(async (req, res) => {
           }
         }
         if (cd.environments.length) {
-          composeJson.services[application.ref]["environment"] =
-            cd.environments;
+          composeJson.services[cd.name]["environment"] = cd.environments;
         }
       }
       res.setHeader(
