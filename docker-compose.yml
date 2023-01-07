@@ -9,6 +9,7 @@ services:
       - "7070:3000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./volumes:/app/volumes
     environment:
       - connection_string=mongodb://mongo:27017/appmanagerdb
       - docker_network=appmanagernet
