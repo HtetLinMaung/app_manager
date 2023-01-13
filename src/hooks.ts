@@ -1,17 +1,13 @@
-import { exec } from "code-alchemy/child_process";
 import fs from "node:fs";
 import { sourcesFolderPath, tempFolderPath } from "./constants";
 import initDeployments from "./data/deployments";
-import Application from "./models/Application";
 import User from "./models/User";
 import connectMongoose from "./utils/connect-mongoose";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
-import { Container, createNetwork } from "starless-docker";
 import connectRedis from "./utils/connect-redis";
 import { redisClient } from "starless-redis";
 import initDatabaseTemplates from "./data/database-templates";
-import ContainerData from "./models/ContainerData";
 import jwt from "jsonwebtoken";
 import updateContainersStatus from "./utils/update-container-status";
 
@@ -47,13 +43,17 @@ export const afterMasterProcessStart = async () => {
   await initDeployments(user._id);
   await initDatabaseTemplates(user._id);
 
+  let i = 1;
   setInterval(() => {
-    try {
-      updateContainersStatus();
-    } catch (err) {
-      console.error(err);
+    if (i % 10 == 0) {
+      try {
+        updateContainersStatus();
+      } catch (err) {
+        console.error(err);
+      }
     }
-  }, 1000 * 10);
+    i++;
+  }, 1000);
 
   // const application = await Application.findOne({ ref: "nodetest" });
   // if (!application) {
