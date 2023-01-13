@@ -189,7 +189,7 @@ export default brewBlankExpressFunc(async (req, res) => {
     await build(application, version, userId);
     message = `Application build successful.`;
   } else if (action == "deploy") {
-    containerData.status = "deploy";
+    containerData.status = await container.state();
     await containerData.save();
     // if (version == application.version) {
     //   return res.status(400).json({
@@ -241,7 +241,7 @@ export default brewBlankExpressFunc(async (req, res) => {
     } catch (err) {
       console.error(err);
     }
-    containerData.status = "stop";
+    containerData.status = await container.state();
     await containerData.save();
 
     await build(application, version, userId);
@@ -261,7 +261,7 @@ export default brewBlankExpressFunc(async (req, res) => {
     } catch (err) {
       console.error(err.message);
     }
-    containerData.status = "ready";
+    containerData.status = await container.state();
     containerData.tag = version;
     await containerData.save();
     application.version = version;
@@ -291,14 +291,14 @@ export default brewBlankExpressFunc(async (req, res) => {
       console.log(err);
     }
 
-    containerData.status = "stop";
+    containerData.status = await container.state();
     await containerData.save();
     try {
       await container.run();
     } catch (err) {
       console.log(err.message);
     }
-    containerData.status = "ready";
+    containerData.status = await container.state();
     containerData.tag = version;
     await containerData.save();
     application.version = version;
