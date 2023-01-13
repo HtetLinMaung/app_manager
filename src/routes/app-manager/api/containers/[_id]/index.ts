@@ -69,10 +69,17 @@ export default brewExpressFuncFindOneOrUpdateOrDeleteByParam(
         container: data._id,
       });
       if (application) {
-        await ApplicationVersion.deleteMany({
-          application: application._id,
-        });
-        await application.remove();
+        const err: any = new Error("Container is protected!");
+        err.status = 400;
+        err.body = {
+          code: 400,
+          message: err.message,
+        };
+        throw err;
+        // await ApplicationVersion.deleteMany({
+        //   application: application._id,
+        // });
+        // await application.remove();
       }
       const container = new Container({
         name: data.name,

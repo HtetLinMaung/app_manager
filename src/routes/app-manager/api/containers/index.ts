@@ -19,6 +19,7 @@ export default brewExpressFuncCreateOrFindAll(
         options["createdby"] = userId;
       }
     },
+    beforeCreate: async (req, res) => {},
     afterCreate: async (data: ContainerDataModel, req, res) => {
       const container = new Container({
         name: data.name,
@@ -32,19 +33,16 @@ export default brewExpressFuncCreateOrFindAll(
         volumes: data.volumes,
         log: true,
       });
-      try {
-        await container.run();
-      } catch (err) {
-        console.log(err.message);
-      }
 
+      await container.run();
+      const status = await container.state();
       await ContainerData.updateOne(
         {
           _id: data._id,
         },
         {
           $set: {
-            status: "ready",
+            status,
           },
         }
       );

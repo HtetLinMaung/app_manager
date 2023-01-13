@@ -44,8 +44,8 @@ const containerDataSchema = new Schema(
     },
     status: {
       type: String,
-      default: "stop",
-      enum: ["start", "stop", "deploy", "restart", "ready"],
+      default: "unknown",
+      // enum: ["start", "stop", "deploy", "restart", "ready"],
     },
     createdby: {
       type: Schema.Types.ObjectId,
