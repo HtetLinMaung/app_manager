@@ -43,33 +43,33 @@ export default brewBlankExpressFunc(async (req, res) => {
   });
   let message = "";
   if (action == "start") {
-    containerData.status = "start";
+    containerData.status = await container.state();
     await containerData.save();
     try {
       await container.stop();
     } catch (err) {
       console.log(err);
     }
-    containerData.status = "stop";
+    containerData.status = await container.state();
     await containerData.save();
     try {
       await container.run();
     } catch (err) {
       console.log(err.message);
     }
-    containerData.status = "ready";
+    containerData.status = await container.state();
     await containerData.save();
     message = `Container start successful.`;
   } else if (action == "stop") {
     await container.stop();
-    containerData.status = "stop";
+    containerData.status = await container.state();
     await containerData.save();
     message = `Container stop successful.`;
   } else if (action == "restart") {
-    containerData.status = "restart";
+    containerData.status = await container.state();
     await containerData.save();
     await container.restart();
-    containerData.status = "ready";
+    containerData.status = await container.state();
     await containerData.save();
     message = `Container restart successful.`;
   } else if (action == "logs") {
