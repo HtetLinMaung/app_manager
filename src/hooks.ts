@@ -43,17 +43,13 @@ export const afterMasterProcessStart = async () => {
   await initDeployments(user._id);
   await initDatabaseTemplates(user._id);
 
-  let i = 1;
   setInterval(() => {
-    if (i % 10 == 0) {
-      try {
-        updateContainersStatus();
-      } catch (err) {
-        console.error(err);
-      }
+    try {
+      updateContainersStatus();
+    } catch (err) {
+      console.error(err);
     }
-    i++;
-  }, 1000);
+  }, 1000 * 10);
 
   // const application = await Application.findOne({ ref: "nodetest" });
   // if (!application) {
