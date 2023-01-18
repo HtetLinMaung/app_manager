@@ -42,6 +42,7 @@ export default brewBlankExpressFunc(async (req, res) => {
     volumes: containerData.volumes,
     log: true,
   });
+
   let message = "";
   if (action == "start") {
     containerData.status = await container.state();
@@ -79,6 +80,7 @@ export default brewBlankExpressFunc(async (req, res) => {
     const since = req.query.since || "";
     const io = server.getIO();
 
+    container.log = false;
     const resultOrChild = await container.logs(
       {
         follow,
@@ -98,6 +100,7 @@ export default brewBlankExpressFunc(async (req, res) => {
         }
       }
     );
+    container.log = true;
     let data = null;
     if (typeof resultOrChild != "string") {
       server.sharedMemory.set(
