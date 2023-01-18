@@ -6,7 +6,6 @@ import ContainerData from "../../../../../../models/ContainerData";
 import { ChildProcessWithoutNullStreams } from "node:child_process";
 import server from "starless-server";
 import kill from "tree-kill";
-import { v4 } from "uuid";
 
 export default brewBlankExpressFunc(async (req, res) => {
   const { userId } = await handleAuthorization(req);
@@ -88,7 +87,6 @@ export default brewBlankExpressFunc(async (req, res) => {
       (stdout, stderr, error, code) => {
         if (io) {
           io.to(userId).emit("logs", {
-            id: v4(),
             containerId: id,
             stdout,
             stderr,
