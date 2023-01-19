@@ -17,7 +17,9 @@ export default brewBlankExpressFunc(async (req, res) => {
     action != "stop" &&
     action != "restart" &&
     action != "logs" &&
-    action != "cancel-logs-stream"
+    action != "cancel-logs-stream" &&
+    action != "stats" &&
+    action != "cancel-stats-stream"
   ) {
     return res.sendStatus(404);
   }
@@ -118,6 +120,53 @@ export default brewBlankExpressFunc(async (req, res) => {
     });
   } else if (action == "cancel-logs-stream") {
     const pid = server.sharedMemory.get(id);
+    if (!pid) {
+      return res.status(404).json({
+        code: 404,
+        message: "Process ID not found!",
+      });
+    }
+
+    kill(pid);
+    return res.json({
+      code: 200,
+      message: `Process ID ${pid} killed successful.`,
+    });
+  } else if (action == "stats") {
+    const waitUntilClose = req.query.stream == "no";
+    const io = server.getIO();
+
+    container.log = false;
+    const resultsOrChild = await container.stats(
+      { waitUntilClose },
+      (stats, error) => {
+        if (stats.length && io) {
+          io.to(userId).emit("stats", {
+            containerId: id,
+            stat: stats[0],
+            error: error ? error.message : null,
+          });
+        }
+      }
+    );
+    container.log = true;
+    let data = null;
+    if (typeof resultsOrChild != "string") {
+      server.sharedMemory.set(
+        `stats_${id}`,
+        (resultsOrChild as ChildProcessWithoutNullStreams).pid
+      );
+    } else {
+      data = resultsOrChild;
+    }
+
+    return res.json({
+      code: 200,
+      message: "Stats fetched successful.",
+      data,
+    });
+  } else if (action == "cancel-stats-stream") {
+    const pid = server.sharedMemory.get(`stats_${id}`);
     if (!pid) {
       return res.status(404).json({
         code: 404,

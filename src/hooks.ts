@@ -10,6 +10,8 @@ import { redisClient } from "starless-redis";
 import initDatabaseTemplates from "./data/database-templates";
 import jwt from "jsonwebtoken";
 import updateContainersStatus from "./utils/update-container-status";
+import { statsContainers } from "starless-docker";
+import server from "starless-server";
 
 export const afterMasterProcessStart = async () => {
   if (!fs.existsSync(sourcesFolderPath)) {
@@ -50,6 +52,17 @@ export const afterMasterProcessStart = async () => {
       console.error(err);
     }
   }, 1000 * 10);
+
+  // statsContainers([], { waitUntilClose: false }, (stats, error) => {
+  //   if (!error) {
+  //     const statsMap: any = {};
+  //     for (const stat of stats) {
+  //       statsMap[stat.Name] = stat;
+  //     }
+  //     console.log(statsMap);
+  //     server.sharedMemory.set("stats", statsMap);
+  //   }
+  // });
 
   // const application = await Application.findOne({ ref: "nodetest" });
   // if (!application) {
